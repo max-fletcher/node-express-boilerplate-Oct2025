@@ -1,0 +1,3 @@
+1. Use Drizzle ORM
+2. Setup Winston(Logger)
+3. 
