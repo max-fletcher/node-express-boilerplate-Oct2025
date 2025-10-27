@@ -8,6 +8,7 @@ import {
   formattedPathsType,
 } from 'types/file.types';
 import path from 'path';
+import { getEnvVar } from '../utils/common.utils';
 
 type DestinationCallback = (error: Error | null, destination: string) => void;
 type FileNameCallback = (error: Error | null, filename: string) => void;
@@ -111,9 +112,9 @@ export const deleteMultipleFileLocal = async (
     const tempFilePath =
       'src/public/' +
       filePath.replace(
-        (!process.env.FILE_BASE_URL || process.env.FILE_BASE_URL === ''
+        (!getEnvVar('FILE_BASE_URL') || getEnvVar('FILE_BASE_URL') === ''
           ? req.protocol + '://' + req.get('host')
-          : process.env.FILE_BASE_URL) + '/',
+          : getEnvVar('FILE_BASE_URL')) + '/',
         '',
       );
     // console.log('tempFilePath', tempFilePath);
@@ -137,8 +138,8 @@ export const multipleFileLocalFullPathResolver = (req: Request) => {
       );
 
       const publicUrl =
-        process.env.FILE_BASE_URL && process.env.FILE_BASE_URL !== ''
-          ? process.env.FILE_BASE_URL
+        getEnvVar('FILE_BASE_URL') && getEnvVar('FILE_BASE_URL') !== ''
+          ? getEnvVar('FILE_BASE_URL')
           : `${req.protocol}://${req.get('host')}`;
 
       return `${publicUrl}/${relativePath.replace(/\\/g, '/')}`;
@@ -160,9 +161,9 @@ export const multipleFileLocalFullPathResolver = (req: Request) => {
 //     element[1].map((fields: fieldsType) => {
 //       console.log('fields', fields);
 //       paths = [
-//         (!process.env.FILE_BASE_URL || process.env.FILE_BASE_URL === ''
+//         (!getEnvVar('FILE_BASE_URL') || getEnvVar('FILE_BASE_URL') === ''
 //           ? req.protocol + '://' + req.get('host')
-//           : process.env.FILE_BASE_URL) +
+//           : getEnvVar('FILE_BASE_URL')) +
 //           '/' +
 //           fields.path
 //             .substring(
@@ -187,9 +188,9 @@ export const multipleFileLocalFullPathResolver = (req: Request) => {
 //   let fullPaths: string[] = [];
 //   relPaths.map((relPath: any) => {
 //     console.log('relPath', relPath);
-//     fullPaths = [...fullPaths, (!process.env.FILE_BASE_URL || process.env.FILE_BASE_URL === ''
+//     fullPaths = [...fullPaths, (!getEnvVar('FILE_BASE_URL') || getEnvVar('FILE_BASE_URL') === ''
 //       ? req.protocol + '://' + req.get('host')
-//       : process.env.FILE_BASE_URL) +
+//       : getEnvVar('FILE_BASE_URL')) +
 //       '/' +
 //       relPath.path
 //         .substring(

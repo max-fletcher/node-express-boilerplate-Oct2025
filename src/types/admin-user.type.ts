@@ -1,4 +1,4 @@
-import { AdminUserModel } from '../db/rdb/models';
+import { AdminUserModel } from '../db/rdb/schema';
 import { InferAttributes, InferCreationAttributes } from 'sequelize';
 
 export type AdminUser = InferAttributes<AdminUserModel>;

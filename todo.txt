@@ -1,3 +1,11 @@
 1. Use Drizzle ORM
 2. Setup Winston(Logger)
-3. 
+3. Interfaces for common functions
+4. Standardized Request and Responses
+5. Change users tablename to appUsers and Up services and repository for appuser
+
+
+
+
+Standards:
+1. 401 should logout

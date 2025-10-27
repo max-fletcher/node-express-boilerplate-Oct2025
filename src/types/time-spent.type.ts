@@ -1,5 +1,5 @@
 import { InferAttributes, InferCreationAttributes } from 'sequelize';
-import { TimeSpentModel } from '../db/rdb/models';
+import { TimeSpentModel } from '../db/rdb/schema';
 
 export type TimeSpent = InferAttributes<TimeSpentModel>;
 

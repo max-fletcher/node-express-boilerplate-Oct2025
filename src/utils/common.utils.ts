@@ -1,14 +1,16 @@
-import { FindOptions, Model, ModelStatic } from 'sequelize';
+// import { FindOptions, Model, ModelStatic } from 'sequelize';
 import { EnvVarNotFoundError } from '../errors/envvar.notfound.error';
 import dotenv from 'dotenv';
-import { PaginationResult } from '../types/common.type';
+// import { PaginationResult } from '../types/common.type';
 
 dotenv.config();
 
 export function getEnvVar(paramName: string): string {
   const value = process.env[paramName];
   const exceptionList = [
-    'USER_DB_PASSWORD',
+    'APP_ENV',
+    'PORT',
+    'FILE_BASE_URL',
     'REDIS_PORT',
     'REDIS_HOST',
     'REDIS_USERNAME',
@@ -16,15 +18,11 @@ export function getEnvVar(paramName: string): string {
     'REDIS_DB',
   ];
 
-  if (!value && value !== '') {
-    throw new EnvVarNotFoundError(
-      `Environment variable ${paramName} not found`,
-    );
-  }
+  if (!value && value !== '')
+    throw new EnvVarNotFoundError(`Environment variable ${paramName} not found`);
 
-  if (value === '' && !exceptionList.includes(paramName)) {
+  if (value === '' && !exceptionList.includes(paramName)) 
     throw new EnvVarNotFoundError(`Environment variable ${paramName} is empty`);
-  }
 
   return value;
 }
@@ -64,43 +62,43 @@ export function getOTPExpiry(): number {
   return Number(getEnvVar('OTP_EXPIRY'));
 }
 
-export const paginatedResults = async <T extends Model>(
-  model: ModelStatic<T>,
-  query: FindOptions<T>,
-  page = 1,
-  pageSize = 10,
-): Promise<PaginationResult<T>> => {
-  // Calculate offset based on page number and page size
-  const offset = (page - 1) * pageSize;
+// export const paginatedResults = async <T extends Model>(
+//   model: ModelStatic<T>,
+//   query: FindOptions<T>,
+//   page = 1,
+//   pageSize = 10,
+// ): Promise<PaginationResult<T>> => {
+//   // Calculate offset based on page number and page size
+//   const offset = (page - 1) * pageSize;
 
-  // Clone the query object to avoid modifying the original
-  const totalCountQuery = { ...query };
+//   // Clone the query object to avoid modifying the original
+//   const totalCountQuery = { ...query };
 
-  // Find the total count
-  const totalCount = (await model.count(totalCountQuery)) as unknown as number;
+//   // Find the total count
+//   const totalCount = (await model.count(totalCountQuery)) as unknown as number;
 
-  query.offset = offset;
-  query.limit = pageSize;
+//   query.offset = offset;
+//   query.limit = pageSize;
 
-  // Query records for the current page with pagination
-  const records = await model.findAll(query);
+//   // Query records for the current page with pagination
+//   const records = await model.findAll(query);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCount / pageSize);
+//   // Calculate total pages
+//   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Determine next page
-  const nextPage = page < totalPages ? page + 1 : null;
+//   // Determine next page
+//   const nextPage = page < totalPages ? page + 1 : null;
 
-  // Determine previous page
-  const prevPage = page > 1 ? page - 1 : null;
+//   // Determine previous page
+//   const prevPage = page > 1 ? page - 1 : null;
 
-  return {
-    page,
-    pageSize,
-    totalPages,
-    totalCount,
-    nextPage,
-    prevPage,
-    records,
-  };
-};
+//   return {
+//     page,
+//     pageSize,
+//     totalPages,
+//     totalCount,
+//     nextPage,
+//     prevPage,
+//     records,
+//   };
+// };

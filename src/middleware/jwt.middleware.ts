@@ -1,13 +1,13 @@
 import { NextFunction, Response } from 'express';
 import { sign, verify } from 'jsonwebtoken';
-import { AdminUserRepository } from '../db/rdb/repositories/admin-user.repository';
+// import { AdminUserRepository } from '../db/rdb/repositories/admin-user.repository';
 import { AppUserPayload, AdminUserPayload } from '../schema/token-payload.schema';
 import {
   AppAuthenticatedRequest,
   AdminAuthenticatedRequest,
 } from '../types/authenticate.type';
 import { getEnvVar } from '../utils/common.utils';
-import { AppUserRepository } from '../db/rdb/repositories/app-user.repository';
+// import { AppUserRepository } from '../db/rdb/repositories/app-user.repository';
 import { datetimeYMDHis } from '../utils/datetime.utils';
 import { CustomException } from '../errors/CustomException.error';
 import { UnauthorizedException } from '../errors/UnauthorizedException.error';
@@ -37,8 +37,9 @@ export class JwtMiddleware {
 
       if (payload) {
         req.user = payload as AdminUserPayload;
-        const adminRepo = new AdminUserRepository();
-        const checkUser = await adminRepo.findAdminUserById(req.user.id);
+        // const adminRepo = new AdminUserRepository();
+        // const checkUser = await adminRepo.findAdminUserById(req.user.id);
+        const checkUser = true
 
         if (!checkUser)
           throw new UnauthorizedException('Invalid Token Data');
@@ -97,8 +98,9 @@ export class JwtMiddleware {
 
       if (payload) {
         req.user = payload as AppUserPayload;
-        const appUserRepo = new AppUserRepository();
-        const checkUser = await appUserRepo.findUserById(req.user.id);
+        // const appUserRepo = new AppUserRepository();
+        // const checkUser = await appUserRepo.findUserById(req.user.id);
+        const checkUser = { deletedAt: false }
 
         if (!checkUser)
           throw new UnauthorizedException('Invalid token provided!')
@@ -156,8 +158,9 @@ export class JwtMiddleware {
             statusCode: 403
           })
 
-        const appUserRepo = new AppUserRepository();
-        const checkUser = await appUserRepo.findUserById(req.user.id);
+        // const appUserRepo = new AppUserRepository();
+        // const checkUser = await appUserRepo.findUserById(req.user.id);
+        const checkUser = { deletedAt: false, isNewUser: true }
 
         if (!checkUser)
           throw new UnauthorizedException('Invalid token provided!')
@@ -213,8 +216,9 @@ export class JwtMiddleware {
         if (payload) {
           req.user = payload as AppUserPayload;
           if (!payload.device_id) {
-            const userRepo = new AppUserRepository();
-            const checkUser = await userRepo.findUserById(req.user.id);
+            // const userRepo = new AppUserRepository();
+            // const checkUser = await userRepo.findUserById(req.user.id);
+            const checkUser = true
 
             if (!checkUser)
               throw new UnauthorizedException('Invalid token provided!')

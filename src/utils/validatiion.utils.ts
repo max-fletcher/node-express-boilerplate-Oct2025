@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { rollbackMultipleFileLocalUpload } from '../middleware/fileUploadLocal.middleware';
 import { NextFunction, Request, Response } from 'express';
+import { getEnvVar } from './common.utils';
 
 export const validateRequestBody =
   (schema: z.ZodSchema) => async (req: Request, res: Response, next: NextFunction) => {
@@ -13,7 +14,9 @@ export const validateRequestBody =
       });
       next();
     } catch (error: any) {
-      // console.log('validateRequestBody', error);
+      if (getEnvVar('APP_ENV') === 'local')
+        console.log('validateRequestBody', error);
+
       // rollbackMultipleFileS3(req);
       rollbackMultipleFileLocalUpload(req);
       if (error instanceof z.ZodError) {
