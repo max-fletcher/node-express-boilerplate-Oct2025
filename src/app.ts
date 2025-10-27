@@ -1,4 +1,4 @@
-
+import 'dotenv/config'; 
 import cors from 'cors';
 import express from 'express';
 import expressListRoutes from 'express-list-routes';
@@ -10,23 +10,13 @@ import { JwtMiddleware } from './middleware/jwt.middleware';
 import { testRouter } from './routes/test.routes';
 // import { AppUserRouter } from './routes/admin/app-user.routes';
 // import { AdminAuthRouter } from './routes/admin/auth.routes';
-// import { CourseRouter } from './routes/admin/course.routes';
-// import { DayRouter } from './routes/admin/day.routes';
-// import { LessonRouter } from './routes/admin/lesson.routes';
-// import { FlashCardRouter } from './routes/admin/flash-card.routes';
 // import { AdminUserRouter } from './routes/admin/admin-user.routes';
 // import { AppAuthRouter } from './routes/app/auth.routes';
 import { AppUserRouter } from './routes/app/app-user.routes';
-// import { AppCourseRouter } from './routes/app/course.routes';
-// import { AppLessonRouter } from './routes/app/lesson.routes';
-// import { AppUserStatisticsRouter } from './routes/app/statistics.routes';
 // import { AppUserHomePage } from './routes/app/homepage.routes';
-// import { LanguageRouter } from './routes/admin/language.routes';
 import { getEnvVar } from './utils/common.utils';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-
-// const numCPUs = os.cpus().length
 
   const queryClient = postgres(getEnvVar('DATABASE_URL'));
   export const db = drizzle(queryClient);
@@ -34,8 +24,7 @@ import postgres from 'postgres';
 const server = () => {
   try {
     const app = express();
-    // const server = http.createServer(app);
-    const PORT = getEnvVar('PORT') || 5000;
+    const PORT = process.env.PORT || 5000;
 
     // parse application/x-www-form-urlencoded
     app.use(express.urlencoded({ extended: true }));
@@ -51,7 +40,7 @@ const server = () => {
 
     // serve static files
     const staticFileMode = getEnvVar('APP_STATIC_FILE_MODE')
-    if(staticFileMode === 'production')
+    if(staticFileMode !== 'local')
       app.use('/', express.static(path.join(__dirname, '/../src/public')));
     else
       app.use('/', express.static(path.join(__dirname, '/public')));
@@ -66,22 +55,14 @@ const server = () => {
     app.use('/api/v1/test', testRouter);
     // admin routes
     // app.use('/api/v1/admin/auth', AdminAuthRouter);
-    // app.use('/api/v1/admin/languages', jwtMiddleware.verifyToken, LanguageRouter);
     // app.use('/api/v1/admin/admin-users', AdminUserRouter);
     // app.use('/api/v1/admin/app-users', jwtMiddleware.verifyToken, AppUserRouter);
-    // app.use('/api/v1/admin/courses', jwtMiddleware.verifyToken, CourseRouter);
-    // app.use('/api/v1/admin/days', jwtMiddleware.verifyToken, DayRouter);
-    // app.use('/api/v1/admin/lessons', jwtMiddleware.verifyToken, LessonRouter);
-    // app.use('/api/v1/admin/flash-cards', jwtMiddleware.verifyToken, FlashCardRouter);
 
     // // app routes
     // app.use('/api/v1/app/auth', AppAuthRouter);
     // app.use('/api/v1/app/homepage', AppUserHomePage);
     // app.use('/api/v1/app/user', AppUserProfileRouter);
-    // app.use('/api/v1/app/course', AppCourseRouter);
-    // app.use('/api/v1/app/lesson', AppLessonRouter);
-    // app.use('/api/v1/app/statistics', AppUserStatisticsRouter);
-    app.use('/api/v1/app/user', AppUserRouter);
+    app.use('/api/v1/app/users', AppUserRouter);
 
     app.all('*', (req, res) => {
       res.status(404);
@@ -101,9 +82,9 @@ const server = () => {
       console.log(`Worker ${process.pid} started on port ${PORT}`);
     });
   } catch (error) {
-    console.log('Error', error);
+    if (process.env.APP_ENV === 'local') 
+      console.log('Error', error);
   }
-  // }
 };
 
 server();

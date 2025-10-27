@@ -31,33 +31,6 @@ export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export const fieldNames = Object.freeze({
-  AVATAR: 'avatar',
-});
-
-export const imageMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-export const getMimeTypeValidationMsg = (validTypes: string[]) => {
-  const validExtensions = validTypes.map(
-    (item) => '.' + item.substring(item.lastIndexOf('/') + 1),
-  );
-  if (validExtensions.length > 1) {
-    const lastExtension = validExtensions.pop();
-    return [validExtensions.join(', '), lastExtension].join(' or ');
-  }
-  return validExtensions.join(', ');
-};
-
-export const isEmptyObject = (obj: any) => {
-  for (const prop in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-      return false;
-    }
-  }
-
-  return true
-}
-
 export function getOTPExpiry(): number {
   return Number(getEnvVar('OTP_EXPIRY'));
 }

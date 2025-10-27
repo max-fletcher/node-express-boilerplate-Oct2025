@@ -41,7 +41,7 @@ import { z } from 'zod';
 //     .max(255, { message: 'Proficiency level cannot exceed 255 characters.' })
 //     .optional()
 //     .nullable(),
-//   avatarUrl: z.array(imageValidationRule).optional().nullable(),
+//   avatarUrl: z.array(imageValidationSchema).optional().nullable(),
 // });
 
 // # IMPROVE LATER

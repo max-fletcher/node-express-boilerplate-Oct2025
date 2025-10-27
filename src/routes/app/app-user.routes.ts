@@ -2,28 +2,30 @@ import express from 'express';
 import { validateRequestBody } from '../../utils/validatiion.utils';
 import { JwtMiddleware } from '../../middleware/jwt.middleware';
 // import { editProfileSchema } from '../../schema/app-auth.schema';
-import { createAppUser, getAppUsers } from '../../controllers/app/app-user.controller';
-import { createAppUserSchema } from '../../schema/app-user.schema';
+import { createAppUser, getAppUsers, updateAppUser } from '../../controllers/app/app-user.controller';
+import { createAppUserSchema, updateAppUserSchema } from '../../schema/app-user.schema';
 
 const AppUserRouter = express.Router();
-const jwtMiddleware = new JwtMiddleware();
+// const jwtMiddleware = new JwtMiddleware();
 
 // Define Routes
 AppUserRouter
-// , jwtMiddleware.verifyAppUserToken
-.get('/users', getAppUsers)
-// jwtMiddleware.verifyAppUserTokenWithoutOTPVerification,
-.post('/users',
+
+.get('/', 
+  // jwtMiddleware.verifyAppUserToken,
+  getAppUsers)
+.post('/',
+  // jwtMiddleware.verifyAppUserToken,
   validateRequestBody(createAppUserSchema),
   createAppUser,
 );
-// AppUserRouter.patch(
-//   '/edit-avatar',
-//   jwtMiddleware.verifyAppUserToken,
-//   appUserFileUploaderMiddleware,
-//   validateRequestBody(updateAvtatarUrlSchama),
-//   editAvatar,
-// );
+AppUserRouter.patch(
+  '/:id',
+  // jwtMiddleware.verifyAppUserToken,
+  // appUserFileUploaderMiddleware,
+  validateRequestBody(updateAppUserSchema),
+  updateAppUser,
+);
 // AppUserRouter.post(
 //   '/save-time-spent-data',
 //   jwtMiddleware.verifyAppUserToken,

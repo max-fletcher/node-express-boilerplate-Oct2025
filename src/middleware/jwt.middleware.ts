@@ -148,15 +148,15 @@ export class JwtMiddleware {
       const payload = verify(token, getEnvVar('JWT_SECRET'));
 
       if (payload) {
-        req.user = payload as AppUserPayload;
-        if(!req.user.verified)
-          return res.json({
-            error: {
-              message: 'Account unverified. Please verify OTP to proceed.',
-              otpVerified: false,
-            },
-            statusCode: 403
-          })
+        // req.user = payload as AppUserPayload;
+        // if(!req.user.verified)
+        //   return res.json({
+        //     error: {
+        //       message: 'Account unverified. Please verify OTP to proceed.',
+        //       otpVerified: false,
+        //     },
+        //     statusCode: 403
+        //   })
 
         // const appUserRepo = new AppUserRepository();
         // const checkUser = await appUserRepo.findUserById(req.user.id);

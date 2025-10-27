@@ -1,6 +1,6 @@
 import { z } from 'zod';
 // import { APP_USER_VERIFICATION_STATUSES } from '../constants/enums';
-// import { imageValidationRule } from './common.schema';
+// import { imageValidationSchema } from './common.schema';
 
 // export const createAppUserSchema = z.object({
 //   phoneNumber: z
@@ -26,7 +26,7 @@ import { z } from 'zod';
 //     .max(255, { message: 'Email cannot exceed 255 characters.' })
 //     .optional()
 //     .nullable(),
-//   avatarUrl: z.array(imageValidationRule).optional().nullable(),
+//   avatarUrl: z.array(imageValidationSchema).optional().nullable(),
 // });
 
 export const createAppUserSchema = z.object({
@@ -42,6 +42,27 @@ export const createAppUserSchema = z.object({
     .string({ required_error: 'Password is required' })
     .trim()
     .max(255, { message: 'Password cannot exceed 255 characters.' })
+});
+
+export const updateAppUserSchema = z.object({
+  name: z
+    .string({ required_error: 'Name is required' })
+    .trim()
+    .max(255, { message: 'Name cannot exceed 255 characters.' })
+    .optional()
+    .nullable(),
+  email: z
+    .string({ required_error: 'Email is required' })
+    .trim()
+    .max(255, { message: 'Email cannot exceed 255 characters.' })
+    .optional()
+    .nullable(),
+  password: z
+    .string({ required_error: 'Password is required' })
+    .trim()
+    .max(255, { message: 'Password cannot exceed 255 characters.' })
+    .optional()
+    .nullable()
 });
 
 // export const updateAppUserSchema = z.object({
@@ -73,5 +94,5 @@ export const createAppUserSchema = z.object({
 //   verified: z.enum(APP_USER_VERIFICATION_STATUSES)
 //     .optional()
 //     .nullable(),
-//   avatarUrl: z.array(imageValidationRule).optional().nullable(),
+//   avatarUrl: z.array(imageValidationSchema).optional().nullable(),
 // });

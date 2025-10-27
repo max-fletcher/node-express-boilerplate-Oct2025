@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const imageValidationRule = z.object({
+export const imageValidationSchema = z.object({
   fieldname: z.string(),
   originalname: z.union([
     z.string().toLowerCase().endsWith('.jpg', {

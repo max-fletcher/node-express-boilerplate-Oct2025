@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { imageValidationRule } from './common.schema';
+import { imageValidationSchema } from './common.schema';
 import { AppUserService } from '../services/admin/app-user.services';
 
 const appUserService = new AppUserService()
@@ -57,7 +57,7 @@ export const editProfileSchema = z.object({
 export type nameSchema = z.infer<typeof editProfileSchema>;
 
 export const updateAvtatarUrlSchama = z.object({
-  avatarUrl: z.array(imageValidationRule, { required_error: 'Avatar image is required.' }),
+  avatarUrl: z.array(imageValidationSchema, { required_error: 'Avatar image is required.' }),
 });
 
 export type avtatarUrlSchama = z.infer<typeof updateAvtatarUrlSchama>;

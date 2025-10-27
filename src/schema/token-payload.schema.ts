@@ -5,9 +5,7 @@ export type AdminUserPayload = {
 
 export type AppUserPayload = {
   id: string
-  phoneNumber: string
-  firstName: string | null
-  lastName: string | null
+  name: string | null
   email: string
-  verified: boolean
+  phoneNumber: string
 };
