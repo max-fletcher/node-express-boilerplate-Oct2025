@@ -1,5 +1,5 @@
 import { Response } from "express"
-import { AnyType } from "../types/common.type";
+import { AnyType } from "../types/types/common.type";
 
 /**
  * Send a consistent, formatted success response.
@@ -19,6 +19,13 @@ export function formattedSuccessResponse(res: Response, message: string, data?: 
   });
 }
 
+/**
+ * Send a consistent, formatted success response.
+ * @param res - Express response object
+ * @param message - Message describing the action
+ * @param data - The payload data
+ * @param statusCode - HTTP status code (defaults to 200)
+ */
 export function formattedSuccessResponseDataObj(res: Response, message: string, data?: AnyType, statusCode?: number){
   return res.status(statusCode ?? 200).json({
     data: {

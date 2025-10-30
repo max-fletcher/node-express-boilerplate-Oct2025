@@ -6,7 +6,7 @@ import { AppUserOTPRepository } from '../../db/rdb/repositories/app-user-otp.rep
 import { generateId, generateOtp } from '../../utils/id.utils';
 import { getOTPExpiry } from '../../utils/common.utils';
 import { BadRequestException } from '../../errors/BadRequestException.error';
-import { AppUser } from '../../types/app-user.type';
+import { AppUser } from '../../types/types/app-user.type';
 import { AppUserPayload } from '../../schema/token-payload.schema';
 
 export class AppUserAuthService {

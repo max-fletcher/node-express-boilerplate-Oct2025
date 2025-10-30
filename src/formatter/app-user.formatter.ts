@@ -1,5 +1,5 @@
 import { AppUserCoursesWithCourseForAdminViewSingleAppUser, AppUserCourseWithCourseAndTimestamps } from '../types/app-user-course.type';
-import { AdminViewSingleAppUserWithAppUserCoursesWithCourse, AppUserWithAppUserCoursesWithCourse, AppUserWithCourses, AppUserWithCoursesForAdminViewSingleAppUser } from '../types/app-user.type';
+import { AdminViewSingleAppUserWithAppUserCoursesWithCourse, AppUserWithAppUserCoursesWithCourse, AppUserWithCourses, AppUserWithCoursesForAdminViewSingleAppUser } from '../types/types/app-user.type';
 
 export function formatAdminViewSingleAppUserWithCourses(data: AdminViewSingleAppUserWithAppUserCoursesWithCourse): AppUserWithCoursesForAdminViewSingleAppUser {
 

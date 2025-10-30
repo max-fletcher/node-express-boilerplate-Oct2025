@@ -5,7 +5,7 @@ import { AppUserPayload, AdminUserPayload } from '../schema/token-payload.schema
 import {
   AppAuthenticatedRequest,
   AdminAuthenticatedRequest,
-} from '../types/authenticate.type';
+} from '../types/types/authenticate.type';
 import { getEnvVar } from '../utils/common.utils';
 // import { AppUserRepository } from '../db/rdb/repositories/app-user.repository';
 import { datetimeYMDHis } from '../utils/datetime.utils';

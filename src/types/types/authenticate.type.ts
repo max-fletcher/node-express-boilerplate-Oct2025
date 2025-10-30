@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { AppUserPayload, AdminUserPayload } from '../schema/token-payload.schema';
+import { AppUserPayload, AdminUserPayload } from '../../schema/token-payload.schema';
 
 export interface AdminAuthenticatedRequest extends Request {
   user?: AdminUserPayload;

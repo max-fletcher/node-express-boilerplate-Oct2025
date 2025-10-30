@@ -1,305 +1,285 @@
-// import { Op, Transaction } from 'sequelize';
-// import { AppUserCourseModel, AppUserModel, CourseModel, LanguageModel } from '../schema';
-// import {
-//   AppUser,
-//   UpdateAppUserData,
-//   StoreAppUser,
-//   AdminViewSingleAppUserWithAppUserCoursesWithCourse,
-// } from '../../../types/app-user.type';
+import { eq, inArray, sql } from 'drizzle-orm';
+import { TAppUser, TAppUserCreate, TAppUserUpdate, TAppUserWithoutPassword } from '../../../types/types/app-user.type';
+import { hashPassword } from '../../../utils/password.utils';
 // import { datetimeYMDHis } from '../../../utils/datetime.utils';
+import { users } from '../schema';
+import { db } from '../../clients/postgres.client';
+import { ICommonRepository } from '../../../types/class-interfaces/common.interfact';
+import { TTransaction } from '../../../types/types/common.type';
+import { selectColumns, excludeColumns } from '../../../utils/drizzle.utils';
 // import { paginatedResults } from '../../../utils/common.utils';
 // import { PaginationResult } from '../../../types/common.type';
-// export class AppUserRepository {
-//   constructor() {}
-//   async createUser(user: StoreAppUser, transaction?: Transaction): Promise<AppUser> {
-//       const createdUser = await AppUserModel.create(user, {
-//         transaction: transaction,
-//       });
-//       return createdUser;
-//   }
+export class AppUserRepository implements ICommonRepository<TAppUser, TAppUserCreate, TAppUserUpdate, TAppUserWithoutPassword> {
+  async getAll(): Promise<TAppUserWithoutPassword[]> {
+    return await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users).orderBy(users.createdAt)
+  }
 
-//   async findUserById(id: string, select: string[]|null = null, withEnrolledCourses: boolean = false): Promise<AppUser|AdminViewSingleAppUserWithAppUserCoursesWithCourse> {
-//     const options: any = {
-//       where: {
-//         id: id,
-//         deletedAt:{
-//           [Op.eq]: null
-//         } 
-//       },
-//     }
+  async findById(id: string, select: (keyof typeof users['_']['columns'])[] | null = null): Promise<Partial<TAppUser>|TAppUserWithoutPassword|null> {
+    const selectShape = select ? selectColumns(users, select) : excludeColumns(users, ['password']);
 
-//     if(withEnrolledCourses)
-//       options.include = [
-//         {
-//           as: 'user_courses',
-//           model: AppUserCourseModel,
-//           required: false,
-//           where: {
-//             deletedAt: {
-//               [Op.eq]: null
-//             }
-//           },
-//           attributes: ['id', 'appUserId', 'courseId'],
-//           include: [
-//             {
-//               as: 'course',
-//               model: CourseModel,
-//               where: {
-//                 deletedAt: {
-//                   [Op.eq]: null
-//                 }
-//               },
-//               attributes: ['id','title'],
-//               include: [
-//                 {
-//                   as: 'language',
-//                   model: LanguageModel,
-//                   where: {
-//                     deletedAt: {
-//                       [Op.eq]: null
-//                     }
-//                   },
-//                   attributes: ['id','name']
-//                 },
-//                 {
-//                   as: 'target_language',
-//                   model: LanguageModel,
-//                   where: {
-//                     deletedAt: {
-//                       [Op.eq]: null,
-//                     },
-//                   },
-//                   attributes: ['id', 'name']
-//                 },
-//               ]
-//             },
-//           ]
-//         },
-//       ]
+    const user = await db
+                  .select(selectShape)
+                  .from(users)
+                  .where(eq(users.id, id))
+                  .limit(1);
 
-//     if(select && select.length > 0)
-//       options.attributes = select
+    return user[0] ?? null;
+  }
 
-//     return (await AppUserModel.findOne(options)) as unknown as AppUser|AdminViewSingleAppUserWithAppUserCoursesWithCourse;
-//   }
+  async findByIds(ids: string[], select: (keyof typeof users['_']['columns'])[] | null = null): Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]> {
+    const selectShape = select ? selectColumns(users, select) : excludeColumns(users, ['password']);
 
-//   async findUserByIds(ids: string[]): Promise<AppUser[]> {
-//     return (await AppUserModel.findAll({
-//       where: {
-//         id: {
-//           [Op.in]: ids,
-//           deletedAt:{
-//             [Op.eq]: null
-//           } 
-//         },
-//       },
-//     })) as unknown as AppUser[];
-//   }
+    const usersData = await db
+                      .select(selectShape)
+                      .from(users)
+                      .where(inArray(users.id, ids));
 
-//   async userExistsById(id: string): Promise<number> {
-//     return await AppUserModel.count({
-//       where: {
-//         id: id,
-//         deletedAt:{
-//           [Op.eq]: null
-//         }
-//       },
-//     });
-//   }
+    return usersData
+  }
 
-//   async findUserByEmail(email: string, exceptId: string | null = null): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         email: email,
-//         deletedAt:{
-//           [Op.eq]: null
-//         }
-//       },
-//     };
+  // async userExistsById(id: string): Promise<number> {
+  //   return await AppUserModel.count({
+  //     where: {
+  //       id: id,
+  //       deletedAt:{
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //   });
+  // }
 
-//     if (exceptId) options.where.id = { [Op.ne]: exceptId };
+  // async findUserByEmail(email: string, exceptId: string | null = null): Promise<AppUser> {
+  //   const options: any = {
+  //     where: {
+  //       email: email,
+  //       deletedAt:{
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //   };
 
-//     return (await AppUserModel.findOne(options)) as unknown as AppUser;
-//   }
+  //   if (exceptId) options.where.id = { [Op.ne]: exceptId };
 
-//   async userExistsByEmail(email: string, exceptId: string | null = null): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         email: email,
-//         deletedAt:{
-//           [Op.eq]: null
-//         }
-//       },
-//     };
-//     if (exceptId) options.where.id = { [Op.ne]: exceptId };
+  //   return (await AppUserModel.findOne(options)) as unknown as AppUser;
+  // }
 
-//     return (await AppUserModel.count(options)) as unknown as AppUser;
-//   }
+  // async userExistsByEmail(email: string, exceptId: string | null = null): Promise<AppUser> {
+  //   const options: any = {
+  //     where: {
+  //       email: email,
+  //       deletedAt:{
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //   };
+  //   if (exceptId) options.where.id = { [Op.ne]: exceptId };
 
-//   async findUserByPhone(phoneNumber: string, exceptId: string | null = null, select: string[]|null = null): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         phoneNumber: phoneNumber,
-//         deletedAt:{
-//           [Op.eq]: null
-//         }
-//       },
-//     };
-//     if (exceptId) options.where.id = { [Op.ne]: exceptId };
+  //   return (await AppUserModel.count(options)) as unknown as AppUser;
+  // }
 
-//     if(select && select.length > 0)
-//       options.attributes = select
+  // async findUserByPhone(phoneNumber: string, exceptId: string | null = null, select: string[]|null = null): Promise<AppUser> {
+  //   const options: any = {
+  //     where: {
+  //       phoneNumber: phoneNumber,
+  //       deletedAt:{
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //   };
+  //   if (exceptId) options.where.id = { [Op.ne]: exceptId };
 
-//     return (await AppUserModel.findOne(options)) as unknown as AppUser;
-//   }
+  //   if(select && select.length > 0)
+  //     options.attributes = select
 
-//   async userExistsByPhone(phoneNumber: string, exceptId: string | null = null) {
-//     const options: any = {
-//       where: {
-//         phoneNumber: phoneNumber,
-//         deletedAt:{
-//           [Op.eq]: null
-//         }
-//       },
-//     };
-//     if (exceptId) options.where.id = { [Op.ne]: exceptId };
+  //   return (await AppUserModel.findOne(options)) as unknown as AppUser;
+  // }
 
-//     return (await AppUserModel.count(options));
-//   }
+  // async userExistsByPhone(phoneNumber: string, exceptId: string | null = null) {
+  //   const options: any = {
+  //     where: {
+  //       phoneNumber: phoneNumber,
+  //       deletedAt:{
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //   };
+  //   if (exceptId) options.where.id = { [Op.ne]: exceptId };
 
-//   // async nullifyUserOtp(id: string): Promise<AppUser> {
-//   //   return (await AppUserModel.update(
-//   //     {
-//   //       otp: null,
-//   //       otp_expires_at: null,
-//   //     },
-//   //     {
-//   //       where: {
-//   //         id: id,
-//   //       },
-//   //     },
-//   //   )) as unknown as AppUser;
-//   // }
+  //   return (await AppUserModel.count(options));
+  // }
 
-//   // async setOtp(id: string, otp: string): Promise<AppUser> {
-//   //   const otp_validity = Number(getEnvVar('OTP_EXPIRY'));
-//   //   return (await AppUserModel.update(
-//   //     {
-//   //       // otp: otp,
-//   //       otp_expires_at: datetimeYMDHis(null, 'mins', otp_validity),
-//   //     },
-//   //     {
-//   //       where: {
-//   //         id: id,
-//   //       },
-//   //     },
-//   //   )) as unknown as AppUser;
-//   // }
+  // async nullifyUserOtp(id: string): Promise<AppUser> {
+  //   return (await AppUserModel.update(
+  //     {
+  //       otp: null,
+  //       otp_expires_at: null,
+  //     },
+  //     {
+  //       where: {
+  //         id: id,
+  //       },
+  //     },
+  //   )) as unknown as AppUser;
+  // }
 
-//     async getPaginatedAppUsers(page: number = 1, limit: number = 10, sortOrder: string, sortBy: string, searchText?: string|null): Promise<PaginationResult<AppUserModel>> {
-//       const options: any = {
-//         where: {
-//           deletedAt: {
-//             [Op.eq]: null
-//           }
-//         },
-//         order: [[sortBy, sortOrder]]
-//       }
+  // async setOtp(id: string, otp: string): Promise<AppUser> {
+  //   const otp_validity = Number(getEnvVar('OTP_EXPIRY'));
+  //   return (await AppUserModel.update(
+  //     {
+  //       // otp: otp,
+  //       otp_expires_at: datetimeYMDHis(null, 'mins', otp_validity),
+  //     },
+  //     {
+  //       where: {
+  //         id: id,
+  //       },
+  //     },
+  //   )) as unknown as AppUser;
+  // }
 
-//       if(searchText){
-//         options.where = {
-//           ...options.where, 
-//           [Op.or]: {
-//             phoneNumber: {
-//               [Op.iLike]: `%${searchText}%` 
-//             },
-//             firstName: {
-//               [Op.iLike]: `%${searchText}%` 
-//             },
-//             lastName: {
-//               [Op.iLike]: `%${searchText}%` 
-//             },
-//             email: {
-//               [Op.iLike]: `%${searchText}%` 
-//             },
-//           }
-//         }
-//       }
+  // async getPaginatedAppUsers(page: number = 1, limit: number = 10, sortOrder: string, sortBy: string, searchText?: string|null): Promise<PaginationResult<AppUserModel>> {
+  //   const options: any = {
+  //     where: {
+  //       deletedAt: {
+  //         [Op.eq]: null
+  //       }
+  //     },
+  //     order: [[sortBy, sortOrder]]
+  //   }
 
-//       return await paginatedResults(AppUserModel, options, page, limit) as PaginationResult<AppUserModel>; // use your actual pagination logic
-//     }
+  //   if(searchText){
+  //     options.where = {
+  //       ...options.where, 
+  //       [Op.or]: {
+  //         phoneNumber: {
+  //           [Op.iLike]: `%${searchText}%` 
+  //         },
+  //         firstName: {
+  //           [Op.iLike]: `%${searchText}%` 
+  //         },
+  //         lastName: {
+  //           [Op.iLike]: `%${searchText}%` 
+  //         },
+  //         email: {
+  //           [Op.iLike]: `%${searchText}%` 
+  //         },
+  //       }
+  //     }
+  //   }
 
-//   async getAllAppUsers(): Promise<AppUser[]> {
-//     return (await AppUserModel.findAll({
-//       where: {
-//         deletedAt: {
-//           [Op.eq]: null
-//         }
-//       },
-//       order: [['createdAt', 'DESC']],
-//     })) as unknown as AppUser[];
-//   }
+  //   return await paginatedResults(AppUserModel, options, page, limit) as PaginationResult<AppUserModel>; // use your actual pagination logic
+  // }
 
-//   async storeAppUser(data: StoreAppUser, transaction?: Transaction): Promise<AppUser> {
-//     const options: any = {};
+  async create(data: TAppUserCreate, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
+    let newUser
+    const selectData = {
+                        id: users.id,
+                        name: users.name,
+                        email: users.email,
+                        createdAt: users.createdAt,
+                        updatedAt: users.updatedAt,
+                      }
 
-//     if(transaction) options.transaction = transaction;
+    if(tx){
+      [newUser] = await tx.insert(users).values({
+                        name: data.name,
+                        email: data.email,
+                        password: await hashPassword(data.password),
+                      })
+                      .returning(selectData);
+    }
+    else{
+      [newUser] = await db.insert(users).values({
+                        name: data.name,
+                        email: data.email,
+                        password: await hashPassword(data.password),
+                      })
+                      .returning(selectData);
 
-//     return await AppUserModel.create(data, options) as unknown as AppUser;
-//   }
+    }
 
-//   async updateAppUser(data: UpdateAppUserData, id: string, transaction?: Transaction): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         id: id,
-//       },
-//     };
+    return newUser
+  }
 
-//     if(transaction) options.transaction = transaction;
+  async update(data: TAppUserUpdate, id: string, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
+    let updatedUser
+    let updateData = {...data, updatedAt: sql`now()`}
+    const selectData = {
+                        id: users.id,
+                        name: users.name,
+                        email: users.email,
+                        createdAt: users.createdAt,
+                        updatedAt: users.updatedAt,
+                      }
 
-//     return (await AppUserModel.update(data, options)) as unknown as AppUser;
-//   }
+    if(data.password)
+      updateData = {...updateData, password: await hashPassword(data.password)}
 
-//   async deleteAppUser(id: string, deletedBy: string, transaction?: Transaction): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         id: id,
-//       },
-//     };
+    if(tx){
+      [updatedUser] = await tx
+                      .update(users)
+                      .set(updateData)
+                      .where(eq(users.id, id))
+                      .returning(selectData);
+    }
+    else{
+      [updatedUser] = await db
+                            .update(users)
+                            .set(updateData)
+                            .where(eq(users.id, id))
+                            .returning(selectData);
+    }
 
-//     if(transaction) options.transaction = transaction;
+    return updatedUser
+  }
 
-//     return await AppUserModel.update({ deletedAt: datetimeYMDHis(), deletedBy: deletedBy }, options) as unknown as AppUser;
-//   }
+  // async deleteAppUser(id: string, deletedBy: string, transaction?: Transaction): Promise<AppUser> {
+  //   const options: any = {
+  //     where: {
+  //       id: id,
+  //     },
+  //   };
 
-//   async hardDeleteById(id: string, transaction?: Transaction): Promise<AppUser> {
-//     const options: any = {
-//       where: {
-//         id: id,
-//       },
-//     };
+  //   if(transaction) options.transaction = transaction;
 
-//     if(transaction) options.transaction = transaction;
+  //   return await AppUserModel.update({ deletedAt: datetimeYMDHis(), deletedBy: deletedBy }, options) as unknown as AppUser;
+  // }
 
-//     return (await AppUserModel.destroy(options)) as unknown as AppUser;
-//   }
+  // async hardDeleteById(id: string, transaction?: Transaction): Promise<AppUser> {
+  //   const options: any = {
+  //     where: {
+  //       id: id,
+  //     },
+  //   };
 
-//   async getAllAppUsersWithOptions(select: string[]|null = null): Promise<AppUser[]> {
-//     const options: any = {};
+  //   if(transaction) options.transaction = transaction;
 
-//     if(select && select.length > 0)
-//       options.attributes = select
+  //   return (await AppUserModel.destroy(options)) as unknown as AppUser;
+  // }
 
-//     return (await AppUserModel.findAll(options));
-//   }
+  // async getAllAppUsersWithOptions(select: string[]|null = null): Promise<AppUser[]> {
+  //   const options: any = {};
 
-//   async getPaginatedAppUsersForCourseList(limit: number, offset: number, orderBy: string): Promise<AppUser[]> {
-//     const options: any = {
-//       limit: limit,
-//       offset: offset,
-//       orderBy: orderBy,
-//     };
+  //   if(select && select.length > 0)
+  //     options.attributes = select
 
-//     return await AppUserModel.findAll(options);
-//   }
-// }
+  //   return (await AppUserModel.findAll(options));
+  // }
+
+  // async getPaginatedAppUsersForCourseList(limit: number, offset: number, orderBy: string): Promise<AppUser[]> {
+  //   const options: any = {
+  //     limit: limit,
+  //     offset: offset,
+  //     orderBy: orderBy,
+  //   };
+
+  //   return await AppUserModel.findAll(options);
+  // }
+}

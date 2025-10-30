@@ -50,7 +50,7 @@ export const audioValidationRule = z.object({
   size: z.number().max(1048576, { message: 'File size must be less than 1MB' }),
 });
 
-export const imageValidationS3Rule = z.object({
+export const imageValidationS3Schema = z.object({
   fieldname: z.string(),
   originalname: z.union([
     z.string().toLowerCase().endsWith('.jpg', {
@@ -95,4 +95,8 @@ export const imageValidationS3Rule = z.object({
   location: z.string(),
   size: z.number().max(5242880, { message: 'File size must be less than 5MB' }),
   etag: z.string(),
+});
+
+export const IdsSchema = z.object({
+  ids: z.array(z.string()),
 });

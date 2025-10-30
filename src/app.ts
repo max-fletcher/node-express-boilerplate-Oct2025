@@ -7,19 +7,14 @@ import path from 'path';
 import { corsOptions } from './config/cors.config';
 import { globalLimiterOptions } from './config/globalRateLimiter.config';
 import { JwtMiddleware } from './middleware/jwt.middleware';
-import { testRouter } from './routes/test.routes';
+import { testRouter } from './routes/test.route';
 // import { AppUserRouter } from './routes/admin/app-user.routes';
 // import { AdminAuthRouter } from './routes/admin/auth.routes';
 // import { AdminUserRouter } from './routes/admin/admin-user.routes';
 // import { AppAuthRouter } from './routes/app/auth.routes';
-import { AppUserRouter } from './routes/app/app-user.routes';
+import { AppUserRouter } from './routes/app/app-user.route';
 // import { AppUserHomePage } from './routes/app/homepage.routes';
 import { getEnvVar } from './utils/common.utils';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-
-  const queryClient = postgres(getEnvVar('DATABASE_URL'));
-  export const db = drizzle(queryClient);
 
 const server = () => {
   try {

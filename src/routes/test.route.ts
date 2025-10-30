@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 // import { MigrationService } from '../services/migration.services';
 // import { multipleFileLocalUploader } from '../middleware/fileUploadLocal.middleware';
 // import { fileDeleteTest, fileUploadTest } from '../controllers/test.controller';
-import { NodeCacheService } from '../services/node-cache.services';
+import { NodeCacheService } from '../services/node-cache.service';
 
 // const migrationService = new MigrationService();
 const nodeCacheService = new NodeCacheService();

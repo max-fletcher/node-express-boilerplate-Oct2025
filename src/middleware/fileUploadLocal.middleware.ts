@@ -6,7 +6,7 @@ import {
   fieldsType,
   fieldType,
   formattedPathsType,
-} from 'types/file.types';
+} from 'types/types/file.types';
 import path from 'path';
 import { getEnvVar } from '../utils/common.utils';
 
