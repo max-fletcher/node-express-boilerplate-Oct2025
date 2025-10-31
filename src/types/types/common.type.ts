@@ -1,15 +1,15 @@
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { db } from "../../db/clients/postgres.client";
+export type TDB = typeof db;
+export type TTransaction = Parameters<Parameters<TDB["transaction"]>[0]>[0];
 
-export type TTransaction = NodePgDatabase;
-
-export type AnyStringKeyValuePair = {
+export type TAnyStringKeyValuePair = {
   [key: string]: string;
 };
 
-export type FileUploaderFields = {
+export type TFileUploaderFields = {
   name: string,
   maxCount: number
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyType = any
+export type TAny = any

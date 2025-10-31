@@ -1,8 +1,7 @@
 import express from 'express';
 import { validateRequestBody } from '../../utils/validatiion.utils';
 // import { JwtMiddleware } from '../../middleware/jwt.middleware';
-// import { editProfileSchema } from '../../schema/app-auth.schema';
-import { createAppUser, findUserById, findUsersByIds, getAll, updateAppUser } from '../../controllers/app/app-user.controller';
+import { createAppUser, deleteAppUser, findUserById, findUsersByIds, getAll, hardDeleteAppUser, updateAppUser } from '../../controllers/app/app-user.controller';
 import { createAppUserSchema, updateAppUserSchema } from '../../schema/app-user.schema';
 import { IdsSchema } from '../../schema/common.schema';
 
@@ -21,6 +20,7 @@ AppUserRouter
   )
   .post('/ids',
     // jwtMiddleware.verifyAppUserToken,
+    validateRequestBody(IdsSchema),
     findUsersByIds
   )
   .post('/',
@@ -35,9 +35,13 @@ AppUserRouter
     validateRequestBody(updateAppUserSchema),
     updateAppUser,
   )
-  // .delete('/:id',
-  //   // jwtMiddleware.verifyAppUserToken,
-  //   createAppUser,
-  // )
+  .delete('/:id',
+    // jwtMiddleware.verifyAppUserToken,
+    deleteAppUser,
+  )
+  .delete('/:id/hard-delete',
+    // jwtMiddleware.verifyAppUserToken,
+    hardDeleteAppUser,
+  )
 
 export { AppUserRouter };

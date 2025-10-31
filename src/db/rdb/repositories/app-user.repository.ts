@@ -1,59 +1,99 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { TAppUser, TAppUserCreate, TAppUserUpdate, TAppUserWithoutPassword } from '../../../types/types/app-user.type';
 import { hashPassword } from '../../../utils/password.utils';
-// import { datetimeYMDHis } from '../../../utils/datetime.utils';
-import { users } from '../schema';
+import { appUsers } from '../db-schema';
 import { db } from '../../clients/postgres.client';
-import { ICommonRepository } from '../../../types/class-interfaces/common.interfact';
 import { TTransaction } from '../../../types/types/common.type';
 import { selectColumns, excludeColumns } from '../../../utils/drizzle.utils';
-// import { paginatedResults } from '../../../utils/common.utils';
-// import { PaginationResult } from '../../../types/common.type';
-export class AppUserRepository implements ICommonRepository<TAppUser, TAppUserCreate, TAppUserUpdate, TAppUserWithoutPassword> {
-  async getAll(): Promise<TAppUserWithoutPassword[]> {
-    return await db.select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      })
-      .from(users).orderBy(users.createdAt)
+import { IAppUserRepositoryInterface } from '../../../types/class-interfaces/app-user.interface';
+import { datetimeYMDHis } from '../../../utils/datetime.utils';
+export class AppUserRepository implements IAppUserRepositoryInterface {
+  private selectData = {
+    id: appUsers.id,
+    name: appUsers.name,
+    email: appUsers.email,
+    createdAt: appUsers.createdAt,
+    updatedAt: appUsers.updatedAt,
+  };
+
+  /**
+   * Fetch all data from the "$users" table
+   *
+   * @async
+   * @function getAll
+   * @param {string[]|null} select Select the fields that you want.
+   * @returns {Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]>} Responds with JSON containing the created $user and status message.
+   */
+  async getAll(select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean): Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]> {
+    const selectShape = select ? selectColumns(appUsers, select, includeGlobals) : excludeColumns(appUsers, ['password'], includeGlobals);
+
+    return await db.select(selectShape).from(appUsers)
+                    .where(isNull(appUsers.deletedAt))
+                    .orderBy(appUsers.createdAt)
   }
 
-  async findById(id: string, select: (keyof typeof users['_']['columns'])[] | null = null): Promise<Partial<TAppUser>|TAppUserWithoutPassword|null> {
-    const selectShape = select ? selectColumns(users, select) : excludeColumns(users, ['password']);
+  /**
+   * Find and fetch single data from the "$users" table
+   *
+   * @async
+   * @function findById
+   * @param {string} id - Id of the data being searched.
+   * @param {string[]|null} select Select the fields that you want.
+   * @returns {Promise<Partial<TAppUser>|TAppUserWithoutPassword|null>} Returns data from the repository. Throws an error if not found.
+   */
+  async findById(id: string, select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean): Promise<Partial<TAppUser>|TAppUserWithoutPassword|null> {
+    const selectShape = select ? selectColumns(appUsers, select, includeGlobals) : excludeColumns(appUsers, ['password'], includeGlobals);
 
-    const user = await db
-                  .select(selectShape)
-                  .from(users)
-                  .where(eq(users.id, id))
-                  .limit(1);
+    const user = await db.select(selectShape).from(appUsers)
+                    .where(and(eq(appUsers.id, id), isNull(appUsers.deletedAt)))
+                    .limit(1);
 
     return user[0] ?? null;
   }
 
-  async findByIds(ids: string[], select: (keyof typeof users['_']['columns'])[] | null = null): Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]> {
-    const selectShape = select ? selectColumns(users, select) : excludeColumns(users, ['password']);
+  /**
+   * Check if data exists in the "$users" table by id
+   *
+   * @async
+   * @function existsById
+   * @param {string} id - Id of the data being searched.
+   * @returns {Promise<boolean>} Returns data from the repository. Throws an error if not found.
+   */
+  async existsById(id: string, hardDeleted: boolean = false): Promise<boolean> {
+    let result
+    if(hardDeleted){
+      result = await db
+                .select({ count: sql<number>`count(*)` })
+                .from(appUsers)
+                .where(eq(appUsers.id, id));
+    }
+    else{
+      result = await db
+                .select({ count: sql<number>`count(*)` })
+                .from(appUsers)
+                .where(and(eq(appUsers.id, id), isNull(appUsers.deletedAt)));
+    }
 
-    const usersData = await db
-                      .select(selectShape)
-                      .from(users)
-                      .where(inArray(users.id, ids));
-
-    return usersData
+    return Number(result[0]?.count ?? 0) > 0;
   }
 
-  // async userExistsById(id: string): Promise<number> {
-  //   return await AppUserModel.count({
-  //     where: {
-  //       id: id,
-  //       deletedAt:{
-  //         [Op.eq]: null
-  //       }
-  //     },
-  //   });
-  // }
+  /**
+   * Find and fetch data matching the ids provided from the "$users" table
+   *
+   * @async
+   * @function findByIds
+   * @param {string[]} ids - Ids of the data being searched.
+   * @param {string[]|null} select Select the fields that you want.
+   * @returns {Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]>} Returns data from the repository.
+   */
+  async findByIds(ids: string[], select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean): Promise<Partial<TAppUser>[]|TAppUserWithoutPassword[]> {
+    const selectShape = select ? selectColumns(appUsers, select, includeGlobals) : excludeColumns(appUsers, ['password'], includeGlobals);
+
+    const appUsersData = await db.select(selectShape).from(appUsers)
+                        .where(and(isNull(appUsers.deletedAt), inArray(appUsers.id, ids)));
+
+    return appUsersData
+  }
 
   // async findUserByEmail(email: string, exceptId: string | null = null): Promise<AppUser> {
   //   const options: any = {
@@ -115,35 +155,6 @@ export class AppUserRepository implements ICommonRepository<TAppUser, TAppUserCr
   //   return (await AppUserModel.count(options));
   // }
 
-  // async nullifyUserOtp(id: string): Promise<AppUser> {
-  //   return (await AppUserModel.update(
-  //     {
-  //       otp: null,
-  //       otp_expires_at: null,
-  //     },
-  //     {
-  //       where: {
-  //         id: id,
-  //       },
-  //     },
-  //   )) as unknown as AppUser;
-  // }
-
-  // async setOtp(id: string, otp: string): Promise<AppUser> {
-  //   const otp_validity = Number(getEnvVar('OTP_EXPIRY'));
-  //   return (await AppUserModel.update(
-  //     {
-  //       // otp: otp,
-  //       otp_expires_at: datetimeYMDHis(null, 'mins', otp_validity),
-  //     },
-  //     {
-  //       where: {
-  //         id: id,
-  //       },
-  //     },
-  //   )) as unknown as AppUser;
-  // }
-
   // async getPaginatedAppUsers(page: number = 1, limit: number = 10, sortOrder: string, sortBy: string, searchText?: string|null): Promise<PaginationResult<AppUserModel>> {
   //   const options: any = {
   //     where: {
@@ -177,109 +188,90 @@ export class AppUserRepository implements ICommonRepository<TAppUser, TAppUserCr
   //   return await paginatedResults(AppUserModel, options, page, limit) as PaginationResult<AppUserModel>; // use your actual pagination logic
   // }
 
+  /**
+   * Creates a new $user in the database.
+   *
+   * @async
+   * @function create
+   * @param {data} TAppUserCreate Data that is used to create a $user
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<TAppUserWithoutPassword>} Returns data after the query executes.
+   */
   async create(data: TAppUserCreate, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
-    let newUser
-    const selectData = {
-                        id: users.id,
-                        name: users.name,
-                        email: users.email,
-                        createdAt: users.createdAt,
-                        updatedAt: users.updatedAt,
-                      }
-
-    if(tx){
-      [newUser] = await tx.insert(users).values({
-                        name: data.name,
-                        email: data.email,
-                        password: await hashPassword(data.password),
-                      })
-                      .returning(selectData);
-    }
-    else{
-      [newUser] = await db.insert(users).values({
-                        name: data.name,
-                        email: data.email,
-                        password: await hashPassword(data.password),
-                      })
-                      .returning(selectData);
-
-    }
+    const executor = tx ?? db
+    const [newUser] = await executor.insert(appUsers).values({
+                          name: data.name,
+                          email: data.email,
+                          password: await hashPassword(data.password),
+                        })
+                        .returning(this.selectData);
 
     return newUser
   }
 
+  /**
+   * Update data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function update
+   * @param {data} TAppUserUpdate Data that is used to update a $user
+   * @param {string} id - Id of the data being updated.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<TAppUserWithoutPassword>} Returns data after the query executes.
+   */
   async update(data: TAppUserUpdate, id: string, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
-    let updatedUser
-    let updateData = {...data, updatedAt: sql`now()`}
-    const selectData = {
-                        id: users.id,
-                        name: users.name,
-                        email: users.email,
-                        createdAt: users.createdAt,
-                        updatedAt: users.updatedAt,
-                      }
+    const executor = tx ?? db
+    let updateData: TAppUserUpdate = {...data, updatedAt: new Date() }
 
     if(data.password)
       updateData = {...updateData, password: await hashPassword(data.password)}
 
-    if(tx){
-      [updatedUser] = await tx
-                      .update(users)
-                      .set(updateData)
-                      .where(eq(users.id, id))
-                      .returning(selectData);
-    }
-    else{
-      [updatedUser] = await db
-                            .update(users)
+    const [updatedUser] = await executor
+                            .update(appUsers)
                             .set(updateData)
-                            .where(eq(users.id, id))
-                            .returning(selectData);
-    }
+                            .where(eq(appUsers.id, id))
+                            .returning(this.selectData);
 
     return updatedUser
   }
 
-  // async deleteAppUser(id: string, deletedBy: string, transaction?: Transaction): Promise<AppUser> {
-  //   const options: any = {
-  //     where: {
-  //       id: id,
-  //     },
-  //   };
+  /**
+   * Soft delete data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function deleteById
+   * @param {string} id - Id of the data being soft deleted.
+   * @param {string} deletedBy - Id of the admin who is deleting the data.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<TAppUserWithoutPassword>} Returns data after the query executes.
+   */
+  async deleteById(id: string, deletedBy: string, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
+    const executor = tx ?? db
+    const softDeleteDataObj = { deletedAt: new Date(), deletedBy }
 
-  //   if(transaction) options.transaction = transaction;
+    const [deletedUser] = await executor
+                            .update(appUsers)
+                            .set(softDeleteDataObj)
+                            .where(eq(appUsers.id, id))
+                            .returning(this.selectData);
 
-  //   return await AppUserModel.update({ deletedAt: datetimeYMDHis(), deletedBy: deletedBy }, options) as unknown as AppUser;
-  // }
+    return deletedUser
+  }
 
-  // async hardDeleteById(id: string, transaction?: Transaction): Promise<AppUser> {
-  //   const options: any = {
-  //     where: {
-  //       id: id,
-  //     },
-  //   };
+  /**
+   * Hard delete data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function hardDeleteById
+   * @param {string} id - Id of the data being hard deleted.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<TAppUserWithoutPassword>} Returns data after the query executes.
+   */
+  async hardDeleteById(id: string, tx?: TTransaction): Promise<TAppUserWithoutPassword> {
+    const executor = tx ?? db
 
-  //   if(transaction) options.transaction = transaction;
+    const [deletedUser] = await executor.delete(appUsers).where(eq(appUsers.id, id)).returning(this.selectData);
 
-  //   return (await AppUserModel.destroy(options)) as unknown as AppUser;
-  // }
-
-  // async getAllAppUsersWithOptions(select: string[]|null = null): Promise<AppUser[]> {
-  //   const options: any = {};
-
-  //   if(select && select.length > 0)
-  //     options.attributes = select
-
-  //   return (await AppUserModel.findAll(options));
-  // }
-
-  // async getPaginatedAppUsersForCourseList(limit: number, offset: number, orderBy: string): Promise<AppUser[]> {
-  //   const options: any = {
-  //     limit: limit,
-  //     offset: offset,
-  //     orderBy: orderBy,
-  //   };
-
-  //   return await AppUserModel.findAll(options);
-  // }
+    return deletedUser
+  }
 }

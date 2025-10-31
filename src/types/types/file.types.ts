@@ -1,11 +1,11 @@
-export type fieldType =
+export type TFieldType =
   | {
       name: string;
       maxCount: number;
     }[]
   | [];
 
-export type fieldsType = {
+export type TFieldsType = {
   fieldname: string;
   originalname: string;
   encoding: string;
@@ -16,11 +16,11 @@ export type fieldsType = {
   size: number;
 };
 
-export type formattedPathsType = {
+export type TFormattedPaths = {
   [key: string]: string[];
 };
 
-export type s3FieldsType = {
+export type TS3TFieldsType = {
   fieldname: string;
   originalname: string;
   encoding: string;
@@ -40,6 +40,6 @@ export type s3FieldsType = {
   versionId?: string;
 };
 
-export type s3FilePaths = {
+export type TS3FilePaths = {
   Key: string;
 };

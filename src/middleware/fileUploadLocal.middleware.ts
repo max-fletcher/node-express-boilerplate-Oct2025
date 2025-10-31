@@ -3,9 +3,9 @@ import { Request } from 'express';
 import fs from 'fs';
 import multer, { FileFilterCallback } from 'multer';
 import {
-  fieldsType,
-  fieldType,
-  formattedPathsType,
+  TFieldsType,
+  TFieldType,
+  TFormattedPaths,
 } from 'types/types/file.types';
 import path from 'path';
 import { getEnvVar } from '../utils/common.utils';
@@ -15,7 +15,7 @@ type FileNameCallback = (error: Error | null, filename: string) => void;
 
 // FILEFIELDNAME(required), DEFAULT PATH = 'temp' & DEFAULT MAXSIZE = 30 MB
 export const multipleFileLocalUploader = (
-  fileFieldName: fieldType,
+  fileFieldName: TFieldType,
   path = 'temp',
   maxSize = 31457280,
 ) => {
@@ -80,9 +80,9 @@ export const rollbackMultipleFileLocalUpload = async (req: Request) => {
   if (!req.files || !Object.keys(req.files).length) return;
 
   // IF EXISTS/NOT EMPTY CHECK
-  Object.values(req.files!).forEach(async (fields: fieldsType[]) => {
+  Object.values(req.files!).forEach(async (fields: TFieldsType[]) => {
     // IF EXISTS/NOT EMPTY CHECK
-    fields.map(async (field: fieldsType) => {
+    fields.map(async (field: TFieldsType) => {
       const directoryPath =
         'src/' +
         field.path.substring(
@@ -127,7 +127,7 @@ export const deleteMultipleFileLocal = async (
 export const multipleFileLocalFullPathResolver = (req: Request) => {
   if (!req.files || !Object.keys(req.files).length) return;
 
-  const formatted_paths: formattedPathsType = {};
+  const formatted_paths: TFormattedPaths = {};
 
   Object.entries(req.files).forEach(([fieldName, files]) => {
     const paths = (files as Express.Multer.File[]).map((file) => {

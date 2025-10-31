@@ -1,9 +1,12 @@
 import { AppUserRepository } from '../../db/rdb/repositories/app-user.repository';
-import { users } from '../../db/rdb/schema';
-import { TAppUserCreate, TAppUserUpdate } from '../../types/types/app-user.type';
+import { appUsers } from '../../db/rdb/db-schema';
+import { NotFoundException } from '../../errors/NotFoundException.error';
+import { IAppUserServiceInterface } from '../../types/class-interfaces/app-user.interface';
+import { TAppUserCreate, TAppUserUpdate,  } from '../../types/types/app-user.type';
 import { TTransaction } from '../../types/types/common.type';
+import { removeDuplicatesFromArray } from '../../utils/common.utils';
 
-export class AppUserService {
+export class AppUserService implements IAppUserServiceInterface {
   private appUserRepo: AppUserRepository;
 
   constructor() {
@@ -11,30 +14,71 @@ export class AppUserService {
   }
 
   /**
-   * Fetch all data from the "users" table
+   * Fetch all data from the "$users" table
    *
    * @async
    * @function getAllAppUsers
-   * @param {import('express').Request} req - The Express request object.
-   * @param {import('express').Response} res - The Express response object.
-   * @returns {Promise<void>} Responds with JSON containing the created user and status message.
-   * @throws {Error} Logs an error to the console if something goes wrong.
+   * @param {string[]} [select=null] select Select the fields that you want.
+   * @param {boolean} [includeGlobals] - Override returning fields that are normally hidden i.e "deletedAt".
+   * @returns {Promise<void>} Returns data from the repository
    */
-  async getAll() {
-    return await this.appUserRepo.getAll();
+  async getAll(select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean) {
+    return await this.appUserRepo.getAll(select, includeGlobals);
   }
 
-  async findById(id: string, select: (keyof typeof users['_']['columns'])[] | null = null) {
-    return await this.appUserRepo.findById(id, select);
+  /**
+   * Find and fetch single data from the "$users" table
+   *
+   * @async
+   * @function findById
+   * @param {string} id - Id of the data being searched.
+   * @param {string[]} [select=null] select Select the fields that you want.
+   * @param {boolean} [includeGlobals] - Override returning fields that are normally hidden i.e "deletedAt".
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if not found.
+   */
+  async findById(id: string, select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean) {
+    const user = await this.appUserRepo.findById(id, select, includeGlobals);
+
+    if(!user)
+      throw new NotFoundException('User not found.')
+
+    return user
   }
 
-  async findByIds(ids: string[], select: (keyof typeof users['_']['columns'])[] | null = null) {
-    return await this.appUserRepo.findByIds(ids, select);
+  /**
+   * Check if data exists in the "$users" table by id
+   *
+   * @async
+   * @function existsById
+   * @param {string} id - Id of the data being searched.
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if not found.
+   */
+  async existsById(id: string) {
+    const exists = await this.appUserRepo.existsById(id);
+
+    if(!exists)
+      throw new NotFoundException('User not found.')
+
+    return exists
   }
 
-  // async userExistsById(id: string) {
-  //   return await this.appUserRepo.userExistsById(id);
-  // }
+  /**
+   * Find and fetch data matching the ids provided from the "$users" table
+   *
+   * @async
+   * @function findByIds
+   * @param {string[]} ids - Ids of the data being searched.
+   * @param {string[]} [select=null] select Select the fields that you want.
+   * @param {boolean} [includeGlobals] - Override returning fields that are normally hidden i.e "deletedAt".
+   * @returns {Promise<void>} Returns data from the repository.
+   */
+  async findByIds(ids: string[], select: (keyof typeof appUsers['_']['columns'])[] | null = null, includeGlobals?: boolean) {
+    ids = removeDuplicatesFromArray(ids)
+
+    const users = await this.appUserRepo.findByIds(ids, select, includeGlobals);
+
+    return users
+  }
 
   // async findUserByEmail(email: string) {
   //   return await this.appUserRepo.findUserByEmail(email);
@@ -62,15 +106,69 @@ export class AppUserService {
   //   return await this.appUserRepo.getPaginatedAppUsersForCourseList(limit, offset, orderBy);
   // }
 
-  async storeAppUser(data: TAppUserCreate, tx?: TTransaction) {
+  /**
+   * Creates a new $user in the database.
+   *
+   * @async
+   * @function create
+   * @param {TAppUserCreate} data - Data(usually validated) that is being stored in DB.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if something goes wrong.
+   */
+  async create(data: TAppUserCreate, tx?: TTransaction) {
     return await this.appUserRepo.create( data, tx);
   }
 
-  async updateAppUser(data: TAppUserUpdate, id: string, tx?: TTransaction) {
+  /**
+   * Update data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function update
+   * @param {TAppUserUpdate} data - Data(usually validated) that is being stored in DB.
+   * @param {string} id - Id of the data being updated.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if something goes wrong.
+   */
+  async update(data: TAppUserUpdate, id: string, tx?: TTransaction) {
+    const exists = await this.existsById(id)
+    if(!exists)
+      throw new NotFoundException('User not found');
+
     return await this.appUserRepo.update(data, id, tx);
   }
 
-  // async deleteAppUser(id: string, deletedBy: string, transaction?: Transaction) {
-  //   return await this.appUserRepo.deleteAppUser(id, deletedBy, transaction);
-  // }
+  /**
+   * Soft delete data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function deleteById
+   * @param {string} id - Id of the data being soft deleted.
+   * @param {string} deletedBy - Id of the admin who is deleting the data.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if something goes wrong.
+   */
+  async deleteById(id: string, deletedBy: string, tx?: TTransaction) {
+    const exists = await this.existsById(id)
+        if(!exists)
+          throw new NotFoundException('User not found');
+
+    return await this.appUserRepo.deleteById(id, deletedBy, tx);
+  }
+
+  /**
+   * Hard delete data matching the provided id from the "$users" table.
+   *
+   * @async
+   * @function hardDeleteById
+   * @param {TAppUserUpdate} data - Data that is being stored in DB.
+   * @param {TTransaction} [tx]  - DB transaction object. Used for DB commit & rollback.
+   * @returns {Promise<void>} Returns data from the repository. Throws an error if something goes wrong.
+   */
+  async hardDeleteById(id: string, tx?: TTransaction) {
+    const user = await this.appUserRepo.existsById(id, true);
+    if(!user)
+      throw new NotFoundException('User not found.')
+
+    return await this.appUserRepo.hardDeleteById(id, tx);
+  }
 }

@@ -1,4 +1,3 @@
-// // db.ts
 // import mongoose from 'mongoose';
 // import { getEnvVar } from '../../utils/common.utils';
 

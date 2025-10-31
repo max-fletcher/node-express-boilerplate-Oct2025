@@ -1,5 +1,6 @@
 import { Request } from 'express';
+import { TAny } from './common.type';
 
-export interface RequestWithFiles extends Request {
-  files?: any;
+export interface TRequestWithFiles extends Request {
+  files?: TAny;
 }

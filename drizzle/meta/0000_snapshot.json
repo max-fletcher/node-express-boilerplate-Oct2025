@@ -1,11 +1,11 @@
 {
-  "id": "f1dfef89-7b08-416c-bc2a-edfe9511bf3e",
+  "id": "ae528d26-a05c-42de-9ac2-adfc01a04b2f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.users": {
-      "name": "users",
+    "public.appUsers": {
+      "name": "appUsers",
       "schema": "",
       "columns": {
         "id": {
@@ -32,6 +32,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -51,8 +63,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
+        "appUsers_email_unique": {
+          "name": "appUsers_email_unique",
           "nullsNotDistinct": false,
           "columns": [
             "email"
@@ -84,6 +96,18 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

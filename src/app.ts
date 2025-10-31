@@ -12,9 +12,9 @@ import { testRouter } from './routes/test.route';
 // import { AdminAuthRouter } from './routes/admin/auth.routes';
 // import { AdminUserRouter } from './routes/admin/admin-user.routes';
 // import { AppAuthRouter } from './routes/app/auth.routes';
-import { AppUserRouter } from './routes/app/app-user.route';
 // import { AppUserHomePage } from './routes/app/homepage.routes';
 import { getEnvVar } from './utils/common.utils';
+import { AppUserRouter } from './routes/admin/app-users.route';
 
 const server = () => {
   try {
@@ -44,20 +44,20 @@ const server = () => {
     app.use(globalLimiterOptions);
     app.set('trust proxy', 1)
 
-    const jwtMiddleware = new JwtMiddleware();
+    // const jwtMiddleware = new JwtMiddleware();
     // ROUTES
     // test router. for development purposes only
     app.use('/api/v1/test', testRouter);
     // admin routes
     // app.use('/api/v1/admin/auth', AdminAuthRouter);
     // app.use('/api/v1/admin/admin-users', AdminUserRouter);
-    // app.use('/api/v1/admin/app-users', jwtMiddleware.verifyToken, AppUserRouter);
+    app.use('/api/v1/admin/app-users', AppUserRouter);
 
     // // app routes
     // app.use('/api/v1/app/auth', AppAuthRouter);
     // app.use('/api/v1/app/homepage', AppUserHomePage);
     // app.use('/api/v1/app/user', AppUserProfileRouter);
-    app.use('/api/v1/app/users', AppUserRouter);
+    // app.use('/api/v1/app/app-users', AppUserRouter);
 
     app.all('*', (req, res) => {
       res.status(404);

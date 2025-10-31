@@ -1,15 +1,10 @@
 import { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-import { users } from '../../db/rdb/schema';
+import { appUsers } from '../../db/rdb/db-schema';
 
-export type TAppUser = InferSelectModel<typeof users>;
+export type TAppUser = Omit<InferSelectModel<typeof appUsers>, 'deletedAt'|'deletedBy'>;
 
-export type TAppUserWithoutPassword = Omit<TAppUser, 'password'>;
+export type TAppUserWithoutPassword = Omit<TAppUser, 'password'|'deletedAt'|'deletedBy'>;
 
-export type TAppUserCreate = InferInsertModel<typeof users>;
+export type TAppUserCreate = InferInsertModel<typeof appUsers>;
 
 export type TAppUserUpdate = Partial<TAppUserCreate>;
-
-// export type StoreAppUser = Partial<InferCreationAttributes<AppUserModel>> & {
-//   id: string;
-//   phoneNumber: string;
-// };

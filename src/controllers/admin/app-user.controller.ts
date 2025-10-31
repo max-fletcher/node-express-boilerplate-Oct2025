@@ -1,367 +1,202 @@
-// import { Response } from 'express';
-// import { CustomException } from '../../errors/CustomException.error';
-// import { AdminAuthenticatedRequest } from '../../types/authenticate.type';
-// import { AppUserService } from '../../services/admin/app-user.services';
-// import { deleteMultipleFileLocal, multipleFileLocalFullPathResolver, rollbackMultipleFileLocalUpload } from '../../middleware/fileUploadLocal.middleware';
-// import { BadRequestException } from '../../errors/BadRequestException.error';
-// import { NotFoundException } from '../../errors/NotFoundException.error';
-// import { AppUserCourseService } from '../../services/admin/app-user-course.services';
-// import { formatAdminViewSingleAppUserWithCourses, formatAppUserWithCourses } from '../../formatter/app-user.formatter';
-// import { AdminViewSingleAppUserWithAppUserCoursesWithCourse, AppUserWithAppUserCoursesWithCourse } from '../../types/app-user.type';
+import { Response } from 'express';
+import { CustomException } from '../../errors/CustomException.error';
+import { AppAuthenticatedRequest } from '../../types/types/authenticate.type';
+import { formattedErrorResponse, formattedSuccessResponse } from '../../formatter/formattedResponse.formatter';
+import { getEnvVar } from '../../utils/common.utils';
+import { AppUserService } from '../../services/app/app-user.service';
+import { TAny } from '../../types/types/common.type';
+import { db } from '../../db/clients/postgres.client';
 
-// const appUserService = new AppUserService();
-// const appUserCourseService = new AppUserCourseService();
+const appUserService = new AppUserService();
 
-// export async function getAllAppUsers(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const page = req.query.page ? Number(req.query.page) : null
-//     const limit = req.query.limit ? Number(req.query.limit) : null
-//     const sortOrder = req.query.sortOrder ? req.query.sortOrder.toString() : 'ASC'
-//     const sortBy = req.query.sortBy ? req.query.sortBy.toString() : 'createdAt'
-//     const searchText = req.query.searchText && req.query.searchText !== '' ? req.query.searchText.toString() : null
+/**
+ * Fetch all data from the "$users" table
+ *
+ * @async
+ * @function getAll
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the created $user and status message.
+ * @throws {Error} Logs an error to the console if something goes wrong.
+ */
+export async function getAll(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const allUsers = await appUserService.getAll()
 
-//     if(sortOrder && sortOrder !== 'ASC' && sortOrder !== 'DESC')
-//       throw new BadRequestException('Sort order has to be ASC or DESC')
+    return formattedSuccessResponse(res, 'All app users.', allUsers, 'users')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV'))
+      console.log('getAll', error)
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-//     let users = null
-//     if(page && limit)
-//       users = await appUserService.getPaginatedAppUsers(page, limit, sortOrder, sortBy, searchText);
-//     else
-//       users = await appUserService.getAllAppUsers();
+    return formattedErrorResponse(res)
+  }
+}
 
-//     return res.status(200).json({
-//       data: {
-//         message: 'User list fetched successfully!',
-//         users: users,
-//       },
-//       statusCode: 200,
-//     });
-//   } catch (error) {
-//     // console.log('getAllAppUsers', error)
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
+/**
+ * Find single $user by Id from the "$users" table
+ *
+ * @async
+ * @function findUserById
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the $user(if found) and status message. Throws an error if not found.
+ * @throws {Error} Logs an error to the console if something goes wrong.
+ */
+export async function findUserById(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const id = req.params.id
+    const user = await appUserService.findById(id)
 
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
+    return formattedSuccessResponse(res, 'User found.', user, 'user')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV'))
+      console.log('findUserById', error)
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-// export async function getPaginatedAppUsersForCourseList(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const { limit, offset, orderBy } = req.params
-//     const users = await appUserService.getPaginatedAppUsersForCourseList(limit, offset, orderBy);
+    return formattedErrorResponse(res)
+  }
+}
 
-//     return res.status(200).json({
-//       data: {
-//         message: 'User list fetched successfully!',
-//         users: users,
-//       },
-//       statusCode: 200,
-//     });
-//   } catch (error) {
-//     // console.log('getAllAppUsers', error)
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
+/**
+ * Find $users by an array of Ids from the "$users" table
+ *
+ * @async
+ * @function findUsersByIds
+ * @param {import('express').Request} req - The Express request object.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing $users(if found) and status message.
+ * @throws {Error} Logs an error to the console if something goes wrong.
+ */
+export async function findUsersByIds(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const ids = req.body.ids
+    const allUsersByIds = await appUserService.findByIds(ids)
 
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
+    return formattedSuccessResponse(res, 'App users by Ids.', allUsersByIds, 'users')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV'))
+      console.log('findUsersByIds', error)
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-// export async function getSingleAppUser(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const appUserId = req.params.id
-//     const user = await appUserService.findUserById(appUserId, null, true);
+    return formattedErrorResponse(res)
+  }
+}
 
-//     if(!user)
-//       throw new NotFoundException('User not found.')
-//     if(user.deletedAt)
-//       throw new NotFoundException('User not found.')
+/**
+ * Creates a new $user in the database.
+ *
+ * Validates the incoming request body, hashes the password, and inserts a new $user record into the `$users` table.
+ *
+ * @async
+ * @function createAppUser
+ * @param {import('express').Request} req - The Express request object, expected to contain validated $user data in the body.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the created $user and status message.
+ * @throws {Error} Logs an error to the console if the insert fails.
+ */
+export async function createAppUser(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    let newAppUser
+    await db.transaction(async (tx) => {
+      newAppUser = await appUserService.create(req.body, tx);
+    });
 
-//     return res.status(200).json({
-//       data: {
-//         message: 'User fetched successfully!',
-//         user: formatAdminViewSingleAppUserWithCourses(user as AdminViewSingleAppUserWithAppUserCoursesWithCourse),
-//       },
-//       statusCode: 200,
-//     });
-//   } catch (error) {
-//     // console.log('getSingleAllAppUser', error)
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
+    return formattedSuccessResponse(res, 'Created App User.', newAppUser, 'user', 201)
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV')) 
+      console.log('createAppUser', error)
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
+    return formattedErrorResponse(res)
+  }
+}
 
-// export async function createAppUser(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const { phoneNumber, firstName, lastName, email } = req.body
+/**
+ * Updates a $user in the database.
+ *
+ * Validates the incoming request body, hashes the password, and updates a $user record in the `$users` table.
+ *
+ * @async
+ * @function updateAppUser
+ * @param {import('express').Request} req - The Express request object, expected to contain validated $user data in the body.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the updated $user and status message.
+ * @throws {Error} Logs an error to the console if the insert fails.
+ */
+export async function updateAppUser(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.params.id
 
-//     const phoneNumberExists = await appUserService.userExistsByPhone(phoneNumber)
-//     if(phoneNumberExists)
-//       throw new BadRequestException('Phone number already taken.')
+    const updatedAppUser = await appUserService.update(req.body, userId)
 
-//     if(email){
-//       const emailExists = await appUserService.userExistsByEmail(req.body.email)
-//       if(emailExists)
-//         throw new BadRequestException('Email already taken.')
-//     }
+    return formattedSuccessResponse(res, 'Updated App User.', updatedAppUser, 'user')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV')) 
+      console.log('updateAppUser', error);
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-//     const filesWithFullPaths = multipleFileLocalFullPathResolver(req)
-//     const data = { ...req.body, isNewUser: firstName && lastName ? false : true, avatarUrl: filesWithFullPaths?.avatarUrl[0] }
-//     const response = await appUserService.storeAppUser(data);
+    return formattedErrorResponse(res)
+  }
+}
 
-//     if(response)
-//       return res.status(201).json({
-//         data: {
-//           message: 'User created successfully!',
-//           user: response,
-//         },
-//         statusCode: 201,
-//       });
+/**
+ * Hard deletes a $user in the database.
+ *
+ * @async
+ * @function deleteAppUser
+ * @param {import('express').Request} req - The Express request object, expected to contain validated $user data in the body.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the deleted $user and status message.
+ * @throws {Error} Logs an error to the console if the delete fails.
+ */
+export async function deleteAppUser(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.params.id
 
-//     throw new CustomException('Something went wrong! Please try again.', 500)
-//   } catch (error) {
-//     // console.log('createAppUser', error)
-//     rollbackMultipleFileLocalUpload(req)
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
+    // FETCH WHO IS DELETING FROM JWT
 
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
+    const deletedAppUser = await appUserService.deleteById(userId, userId)
 
-// export async function updateAppUser(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const appUserId = req.params.id
-//     const user = await appUserService.findUserById(appUserId, ['id', 'avatarUrl', 'deletedAt'])
-//     if(!user)
-//       throw new NotFoundException('User not found.')
-//     if(user.deletedAt)
-//       throw new NotFoundException('User not found.')
+    return formattedSuccessResponse(res, 'Deleted App User.', deletedAppUser, 'user')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV')) 
+      console.log('deleteAppUser', error);
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-//     if(req.body.phoneNumber){
-//       const phoneNumberExists = await appUserService.userExistsByPhone(req.body.phoneNumber, appUserId)
-//       if(phoneNumberExists)
-//         throw new BadRequestException('Phone number already taken.')
-//     }
+    return formattedErrorResponse(res)
+  }
+}
 
-//     if(req.body.email){
-//       const emailExists = await appUserService.userExistsByEmail(req.body.email, appUserId)
-//       if(emailExists)
-//         throw new BadRequestException('Email already taken.')
-//     }
+/**
+ * Hard deletes a $user in the database.
+ *
+ * @async
+ * @function hardDeleteAppUser
+ * @param {import('express').Request} req - The Express request object, expected to contain validated $user data in the body.
+ * @param {import('express').Response} res - The Express response object.
+ * @returns {Promise<Response<any, Record<string, any>>>} Responds with JSON containing the deleted $user and status message.
+ * @throws {Error} Logs an error to the console if the delete fails.
+ */
+export async function hardDeleteAppUser(req: AppAuthenticatedRequest, res: Response) {
+  try {
+    const userId = req.params.id
 
-//     let data = { ...req.body }
+    const hardDeletedAppUser = await appUserService.hardDeleteById(userId)
 
-//     if(req.files?.avatarUrl && req.files?.avatarUrl.length > 0){
-//       if(user.avatarUrl)
-//         deleteMultipleFileLocal(req, [user.avatarUrl])
+    return formattedSuccessResponse(res, 'Hard deleted App User.', hardDeletedAppUser, 'user')
+  } catch (error: TAny) {
+    if(getEnvVar('APP_ENV')) 
+      console.log('deleteAppUser', error);
+    if (error instanceof CustomException)
+      return formattedErrorResponse(res, error.message, error.statusCode)
 
-//       const filesWithFullPaths = multipleFileLocalFullPathResolver(req)
-//       data = { ...data, avatarUrl: filesWithFullPaths?.avatarUrl[0] }
-//     }
-
-//     const response = await appUserService.updateAppUser(data, appUserId);
-
-//     if(response){
-//       const user = await appUserService.findUserById(appUserId);
-//       return res.json({
-//         data: {
-//           message: 'User updated successfully!',
-//           user: user,
-//         },
-//         statusCode: 200,
-//       });
-//     }
-//     throw new CustomException('Something went wrong! Please try again.', 500)
-//   } catch (error) {
-//     // console.log('updateAppUser', error);
-//     rollbackMultipleFileLocalUpload(req)
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
-
-// export async function deleteAppUser(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const appUserId = req.params.id
-
-//     const user = await appUserService.findUserById(appUserId)
-//     if(!user)
-//       throw new NotFoundException('User not found.')
-//     if(user.deletedAt)
-//       throw new NotFoundException('User not found.')
-
-//     if(user.avatarUrl)
-//       deleteMultipleFileLocal(req, [user.avatarUrl])
-
-//     const response = await appUserService.deleteAppUser(appUserId, req.user!.id);
-
-//     if(response){
-//       return res.json({
-//         data: {
-//           message: 'User deleted successfully!',
-//         },
-//         statusCode: 200,
-//       });
-//     }
-//     throw new CustomException('Something went wrong! Please try again.', 500)
-//   } catch (error) {
-//     // console.log('updateAppUser', error);
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
-
-// export async function enrollAppUserToCourse(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const appUserId = req.body.appUserId
-//     let courseIds = req.body.courseIds
-//     courseIds = [...new Set(courseIds)] as string[];
-
-//     const data = []
-//     for (let i = 0; i < courseIds.length; i++) {
-//       const enrolled = await appUserCourseService.appUserCourseExistsByAppUserIdAndCourseId(appUserId, courseIds[i]);
-//       if(!enrolled)
-//         data.push({ appUserId: req.body.appUserId, courseId: courseIds[i], updatedBy: req.user!.id, deletedAt: null, deletedBy: null })
-//     }
-
-//     const response = await appUserCourseService.bulkStoreAppUserCourse(data);
-
-//     if(response){
-//       return res.json({
-//         data: {
-//           message: 'App user enrolled successfully!',
-//           enrolled: response,
-//         },
-//         statusCode: 200,
-//       });
-//     }
-//     throw new CustomException('Something went wrong! Please try again.', 500)
-//   } catch (error) {
-//     // console.log('enrollAppUserToCourse', error);
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
-
-// export async function appUserEnrolled(req: AdminAuthenticatedRequest, res: Response) {
-//   try {
-//     const { id } = req.params
-
-//     const appUserWithCourses = await appUserCourseService.findAppUserWithCoursesById(id) as AppUserWithAppUserCoursesWithCourse
-//     if(!appUserWithCourses)
-//       throw new NotFoundException('App user not found.')
-
-//     if(appUserWithCourses){
-//       return res.json({
-//         data: {
-//           message: 'User with enrolled courses list.',
-//           appUser: formatAppUserWithCourses(appUserWithCourses),
-//         },
-//         statusCode: 200,
-//       });
-//     }
-//     throw new CustomException('Something went wrong! Please try again.', 500)
-//   } catch (error) {
-//     // console.log('enrollAppUserToCourse', error);
-//     if (error instanceof CustomException) {
-//       return res.status(error.statusCode).json({
-//         error: {
-//           message: error.message,
-//         },
-//         statusCode: error.statusCode,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       error: {
-//         message: 'Something went wrong! Please try again.',
-//       },
-//       statusCode: 500,
-//     });
-//   }
-// }
+    return formattedErrorResponse(res)
+  }
+}

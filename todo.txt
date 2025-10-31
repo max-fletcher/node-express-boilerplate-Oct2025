@@ -1,11 +1,15 @@
 1. Use Drizzle ORM
 2. Setup Winston(Logger)
-3. Interfaces for common functions
-4. Standardized Request and Responses
+3. Interfaces for common functions(Service and Repository DONE. Not sure about Controller)
+4. Standardized Request and Responses(DONE)
 5. Change users tablename to appUsers and Up services and repository for appuser
-
-
+6. Exceptions(DONE)
+7. pagination util inside common.utils.ts
+8. Soft Deletes(DONE)
 
 
 Standards:
 1. 401 should logout
+
+yarn drizzle-kit generate
+yarn drizzle-kit push

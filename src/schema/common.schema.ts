@@ -98,5 +98,5 @@ export const imageValidationS3Schema = z.object({
 });
 
 export const IdsSchema = z.object({
-  ids: z.array(z.string()),
+  ids: z.array(z.string()).min(1, "At least 1 id is required"),
 });

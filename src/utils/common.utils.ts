@@ -1,6 +1,7 @@
 // import { FindOptions, Model, ModelStatic } from 'sequelize';
 import { EnvVarNotFoundError } from '../errors/envvar.notfound.error';
 import dotenv from 'dotenv';
+import { TAny } from '../types/types/common.type';
 // import { PaginationResult } from '../types/common.type';
 
 dotenv.config();
@@ -33,6 +34,10 @@ export function delay(ms: number): Promise<void> {
 
 export function getOTPExpiry(): number {
   return Number(getEnvVar('OTP_EXPIRY'));
+}
+
+export function removeDuplicatesFromArray(data: TAny[]): TAny[] {
+  return [...new Set(data)];;
 }
 
 // export const paginatedResults = async <T extends Model>(

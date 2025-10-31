@@ -6,8 +6,8 @@
 // import { findCharIndex } from '../utils/string.utils';
 // import {
 //   fileFieldNameType,
-//   s3FieldsType,
-//   s3FilePaths,
+//   TS3TFieldsType,
+//   TS3FilePaths,
 // } from '../types/file.types';
 
 // const accessKeyId = getEnvVar('AWS_ACCESS_KEY');
@@ -105,17 +105,17 @@
 // export const rollbackMultipleFileS3 = async (req: Request) => {
 //   if (!req.files || !Object.keys(req.files).length) return;
 
-//   const s3Filepaths: s3FilePaths[] = [];
-//   Object.values(req.files!).forEach(async (fields: s3FieldsType[]) => {
-//     fields.map(async (field: s3FieldsType) => {
-//       s3Filepaths.push({ Key: field.key });
+//   const TS3FilePaths: TS3FilePaths[] = [];
+//   Object.values(req.files!).forEach(async (fields: TS3TFieldsType[]) => {
+//     fields.map(async (field: TS3TFieldsType) => {
+//       TS3FilePaths.push({ Key: field.key });
 //     });
 //   });
 
 //   const params = {
 //     Bucket: bucket,
 //     Delete: {
-//       Objects: s3Filepaths,
+//       Objects: TS3FilePaths,
 //     },
 //   };
 
